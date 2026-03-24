@@ -1,14 +1,14 @@
 from raylib import *
 from settings import * 
-from snake_game import Game
+from cycle_game import Game
 from main_title import TitleScreen
 
 if __name__ == '__main__':  
 
   init_window(WINDOW_WIDTH, WINDOW_HEIGHT, "Python Game")
-  set_target_fps(120)
+  set_target_fps(60)
   
-  game = Game()
+  game = Game(3)
   game.isGameOver = True
   title_screen = TitleScreen(game)
   
