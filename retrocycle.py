@@ -34,7 +34,7 @@ class Retrocycle:
         self.camera.offset = Vector2(view_width / 2, view_height / 2)
         self.camera.rotation = 180.0
         self.camera_target_rotation = self.camera.rotation
-        self.camera.zoom = 2.0
+        self.camera.zoom = 4.0
         self.pillow = self.max_pillow
         self.isrespawning = False
         self.players = []
@@ -148,6 +148,8 @@ class Retrocycle:
                 sv = Vector2(sx,sy)
                 square_coords = translateGridtoXY(sv)
                 DrawRectangleV(square_coords,(CELL_W,CELL_H),player.color)
+                
+
     
     def process_body(self, tick):
         if(Wall(Vector2(self.position.x,self.position.y)) not in self.body and not self.isrespawning):
@@ -156,9 +158,7 @@ class Retrocycle:
             bodyPart.update(tick)
             if(not bodyPart.alive):
                 self.body.remove(bodyPart)
-
-                
-            
+          
     def respawn(self):
         self.position = Vector2(randint(1,GRID_AMOUNT_X - 2),randint(1,GRID_AMOUNT_Y - 2))
         self.moveInterval = self.base_accel_speed * self.speed_divider

@@ -18,7 +18,7 @@ class Game():
         self.playersRenderTexture = []
         for i in range(num_players):
             left_key, right_key = GAME_CONTROLS[i]
-            curr_player = Retrocycle(Vector2(5, 5), PLAYER_COLORS[i], left_key, right_key, self.view_width, self.view_height)
+            curr_player = Retrocycle(Vector2(0, 0), PLAYER_COLORS[i], left_key, right_key, self.view_width, self.view_height)
             player_texture = load_render_texture(self.view_width, self.view_height)
             self.players.append((player_texture, curr_player))
         for _ , player in self.players:
@@ -30,7 +30,7 @@ class Game():
             player.update()
             
             if(player.isPlayerDead):
-                print("Player died!")
+                print(f"Player died!")
                 player.respawn()
     def draw(self):
         
@@ -41,20 +41,30 @@ class Game():
             begin_mode_2d(player.camera)
             player.draw()
 
-            for i in range(0,GRID_AMOUNT_Y + 1,1):
-                x = i * CELL_W
-                DrawLine(x, 0, x, WINDOW_HEIGHT, GRAY)
+            for i in range(0, GRID_AMOUNT_X + 1, 1):
+                x = PLAYFIELD_OFFSET_X + (i * CELL_W)
+                DrawLine(x, PLAYFIELD_OFFSET_Y, x, PLAYFIELD_OFFSET_Y + PLAYFIELD_HEIGHT, GRAY)
 
-            for i in range(0,GRID_AMOUNT_X + 1,1):
-                y = i * CELL_H
+            for i in range(0, GRID_AMOUNT_Y + 1, 1):
+                y = PLAYFIELD_OFFSET_Y + (i * CELL_H)
                 
-                DrawLine(0, y, WINDOW_WIDTH, y, GRAY)
+                DrawLine(PLAYFIELD_OFFSET_X, y, PLAYFIELD_OFFSET_X + PLAYFIELD_WIDTH, y, GRAY)
+            
+
             end_mode_2d()
             end_texture_mode()
 
-        for i, (player_texture, _) in enumerate(self.players):
-            draw_texture_rec(player_texture.texture, self.split_screen_rectangle, Vector2(i * self.view_width, 0), WHITE)
+        for i, (texture, player) in enumerate(self.players):
+            draw_texture_rec(texture.texture, self.split_screen_rectangle, Vector2(i * self.view_width, 0), WHITE)
+            self.draw_player_UI(player)
+
         
+    def draw_player_UI(self, player):
+        show_velocity = round(1.0 / player.moveInterval, 2)
+        shown_pillow = round(player.pillow, 2)
+        offset = Vector2(player.camera.target.x - self.view_width / 2, player.camera.target.y - self.view_height / 2)
+        draw_text(f"Velocity: {show_velocity}", int(offset.x) + 10, int(offset.y) + 10, 100, WHITE)
+        draw_text(f"Pillow: {shown_pillow}", 10, 40, 100, WHITE)  
     def decide_player_respawn_location(self, player):
         player.position = Vector2(randint(1,GRID_AMOUNT_X - 2),randint(1,GRID_AMOUNT_Y - 2))
 
