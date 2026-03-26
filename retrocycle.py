@@ -5,6 +5,7 @@ from settings import *
 
 from wall import Wall
 from enum import Enum
+import time
 
 
 class Retrocycle:
@@ -15,8 +16,9 @@ class Retrocycle:
     accel_speed_below = base_accel_speed / 10
     accel_speed_above = base_accel_speed / 50
     camera_turn_smoothness = 14.0
-    max_pillow = 0.10
-    pillow_recover_rate = 0.05
+    max_pillow = 1
+    pillow_recover_rate = 0.25
+    pillow_drain_rate = 1
     
 
     def __init__(self, position:Vector2,color:Color,left_key,right_key,view_width,view_height) -> None:
@@ -38,6 +40,8 @@ class Retrocycle:
         self.pillow = self.max_pillow
         self.isrespawning = False
         self.players = []
+        self.colliding_now = False
+
 
 
         
@@ -56,39 +60,37 @@ class Retrocycle:
                 
         
         self.timer += get_frame_time()
-        
-        
+        # check collision and move
         if(self.timer >= self.moveInterval):
             desiredPosition = Vector2Add(self.position,map_int_to_heading(self.heading))
-
-            if (check_vector_OOB(desiredPosition,GRID_AMOUNT_X)):
-                next_wall = Wall(Vector2(desiredPosition.x, desiredPosition.y))
-                has_collision = False
-
-                for _ , player in self.players:
-                    if(player.isrespawning):
-                        continue
-                    if(next_wall in player.body):
-                        has_collision = True
-                        break
-
-                if(has_collision):
-                    self.pillow -= 1 * get_frame_time()
-                    if(self.pillow <= 0):
-                        self.isPlayerDead = True
-                else:
-                    self.position = desiredPosition
-                    self.pillow = lerp(self.pillow, self.max_pillow, self.pillow_recover_rate)
-
-            else:
-                if(not self.isrespawning):
-                    self.pillow -= 1 * get_frame_time()
-                    if(self.pillow <= 0):
-                        self.isPlayerDead = True
-            
+            next_wall = Wall(Vector2(desiredPosition.x, desiredPosition.y))
             self.timer -= self.moveInterval
+            caused_collision = False
+            if (check_vector_OOB(desiredPosition,GRID_AMOUNT_X)):
+                caused_collision = True
+            for _ , player in self.players:
+                if(player.isrespawning):
+                    continue
+                if(next_wall in player.body):
+                    caused_collision = True
+                    break
+            
+            if(caused_collision):
+                self.colliding_now = True
+            else:
+                self.position = desiredPosition
+                self.colliding_now = False
+
+        # independent of moveInterval drain pillow
+        if(self.colliding_now):
+            self.pillow -= self.pillow_drain_rate * get_frame_time()
+            if(self.pillow <= 0):
+                self.isPlayerDead = True
+        else:
+            self.pillow = lerp(self.pillow, self.max_pillow, self.pillow_recover_rate * get_frame_time())
+            
         
-        
+        # accelerate/decelerate towards base speed
         target_interval = self.base_accel_speed * self.speed_divider
         if(self.moveInterval > self.base_accel_speed * self.speed_divider):
             recover_rate = self.accel_speed_below * self.speed_divider
@@ -97,8 +99,9 @@ class Retrocycle:
         step = recover_rate * get_frame_time()
 
         interval_diff = abs(target_interval - self.moveInterval)
-        interval_t = 1.0 if interval_diff == 0 else min(1.0, step / interval_diff)
-        self.moveInterval = lerp(self.moveInterval, target_interval, interval_t)
+        if(interval_diff > 0):
+            interval_t = step / interval_diff
+            self.moveInterval = lerp(self.moveInterval, target_interval, interval_t)
         
         if(self.moveInterval > self.min_accel_speed * self.speed_divider):
             self.moveInterval = self.min_accel_speed * self.speed_divider
@@ -174,8 +177,8 @@ class Retrocycle:
         
 def check_vector_OOB(vector: Vector2, bound):
     if(vector.x >= 0 and vector.y >= 0 and vector.x < bound and vector.y < bound):
-        return True
-    return False
+        return False
+    return True
 
     
 def map_int_to_heading(num):
