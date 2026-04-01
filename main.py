@@ -8,7 +8,7 @@ if __name__ == '__main__':
   init_window(WINDOW_WIDTH, WINDOW_HEIGHT, "Python Game")
   set_target_fps(120)
   
-  game = Game(1)
+  game = Game(NUM_PLAYERS)
   game.isGameOver = True
   title_screen = TitleScreen(game)
   

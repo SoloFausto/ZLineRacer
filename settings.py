@@ -1,6 +1,7 @@
 from pyray import *
 from raylib import *
-
+from random import random
+from math import cos, sin
 
 from random import randint, uniform
 from os.path import join
@@ -21,7 +22,7 @@ PLAYFIELD_WIDTH = CELL_W * GRID_AMOUNT_X
 PLAYFIELD_HEIGHT = CELL_H * GRID_AMOUNT_Y
 PLAYFIELD_OFFSET_X = (WINDOW_WIDTH - PLAYFIELD_WIDTH) // 2
 PLAYFIELD_OFFSET_Y = (WINDOW_HEIGHT - PLAYFIELD_HEIGHT) // 2
-WIN_SCORE = 5
+NUM_PLAYERS = 1
 
 
 

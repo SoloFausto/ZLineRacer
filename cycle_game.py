@@ -43,6 +43,7 @@ class Game():
 
             for i in range(0, GRID_AMOUNT_X + 1, 1):
                 x = PLAYFIELD_OFFSET_X + (i * CELL_W)
+                
                 DrawLine(x, PLAYFIELD_OFFSET_Y, x, PLAYFIELD_OFFSET_Y + PLAYFIELD_HEIGHT, GRAY)
 
             for i in range(0, GRID_AMOUNT_Y + 1, 1):
@@ -56,15 +57,15 @@ class Game():
 
         for i, (texture, player) in enumerate(self.players):
             draw_texture_rec(texture.texture, self.split_screen_rectangle, Vector2(i * self.view_width, 0), WHITE)
-            self.draw_player_UI(player)
+            self.draw_player_UI(player, i * self.view_width)
 
         
-    def draw_player_UI(self, player):
+    def draw_player_UI(self, player,view_root):
         show_velocity = round(1.0 / player.moveInterval, 2)
         shown_pillow = round(player.pillow, 2)
-        offset = Vector2(player.camera.target.x - self.view_width / 2, player.camera.target.y - self.view_height / 2)
-        draw_text(f"Velocity: {show_velocity}", int(offset.x) + 10, int(offset.y) + 10, 100, WHITE)
-        draw_text(f"Pillow: {shown_pillow}", 10, 40, 100, WHITE)  
+        draw_text(f"Velocity: {show_velocity}", view_root + 10, 10, 100, WHITE)
+        draw_text(f"Pillow: {shown_pillow}", view_root + 10, 150, 100, WHITE)  
+        
     def decide_player_respawn_location(self, player):
         player.position = Vector2(randint(1,GRID_AMOUNT_X - 2),randint(1,GRID_AMOUNT_Y - 2))
 

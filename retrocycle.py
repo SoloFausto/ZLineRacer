@@ -5,7 +5,7 @@ from settings import *
 
 from wall import Wall
 from enum import Enum
-import time
+import math
 
 
 class Retrocycle:
@@ -16,9 +16,11 @@ class Retrocycle:
     accel_speed_below = base_accel_speed / 10
     accel_speed_above = base_accel_speed / 50
     camera_turn_smoothness = 14.0
-    max_pillow = 1
-    pillow_recover_rate = 0.25
-    pillow_drain_rate = 1
+    max_pillow = 0.10
+    pillow_recover_rate = 0.05
+    pillow_loss_rate = 0.35
+    grind_particle_spawn_rate = 220
+    grind_particle_max = 250
     
 
     def __init__(self, position:Vector2,color:Color,left_key,right_key,view_width,view_height) -> None:
@@ -27,6 +29,7 @@ class Retrocycle:
         self.body = set()
         self.body.add(Wall(Vector2(position.x,position.y)))
         self.heading = 2
+        self.last_move_vector = map_int_to_heading(self.heading)
         self.left_key = left_key
         self.right_key = right_key
         self.isPlayerDead = False
@@ -39,9 +42,10 @@ class Retrocycle:
         self.camera.zoom = 4.0
         self.pillow = self.max_pillow
         self.isrespawning = False
+        self.hasCollided = False
+        self.isGrinding = False
         self.players = []
-        self.colliding_now = False
-
+        self.particle_emmiter = ParticleEmitter(Vector2(0,0),Vector2(0,0),ORANGE,0.1)
 
 
         
@@ -57,40 +61,44 @@ class Retrocycle:
             self.moveInterval /= self.turn_accel_multiplier
             self.camera_target_rotation = (self.camera_target_rotation - 90) % 360
         
-                
+        
         
         self.timer += get_frame_time()
-        # check collision and move
+                    
+        self.isGrinding = self.should_be_grinding()
+        if(self.isGrinding):
+            self.moveInterval /= 1.005
+            self.particle_emmiter.add_particles(20)
+        
         if(self.timer >= self.moveInterval):
             desiredPosition = Vector2Add(self.position,map_int_to_heading(self.heading))
             next_wall = Wall(Vector2(desiredPosition.x, desiredPosition.y))
-            self.timer -= self.moveInterval
-            caused_collision = False
+            has_collision = False
             if (check_vector_OOB(desiredPosition,GRID_AMOUNT_X)):
-                caused_collision = True
+                has_collision = True
             for _ , player in self.players:
                 if(player.isrespawning):
                     continue
                 if(next_wall in player.body):
-                    caused_collision = True
+                    has_collision = True
                     break
-            
-            if(caused_collision):
-                self.colliding_now = True
-            else:
-                self.position = desiredPosition
-                self.colliding_now = False
 
-        # independent of moveInterval drain pillow
-        if(self.colliding_now):
-            self.pillow -= self.pillow_drain_rate * get_frame_time()
+            if(has_collision):
+                self.hasCollided = True
+            else:
+                self.hasCollided = False
+                self.last_move_vector = map_int_to_heading(self.heading)
+                self.position = desiredPosition
+            
+        
+        if(self.hasCollided):
+            self.pillow -= self.pillow_loss_rate * get_frame_time()
             if(self.pillow <= 0):
                 self.isPlayerDead = True
         else:
-            self.pillow = lerp(self.pillow, self.max_pillow, self.pillow_recover_rate * get_frame_time())
-            
+                self.pillow = min(self.max_pillow, self.pillow + self.pillow_recover_rate * get_frame_time())
         
-        # accelerate/decelerate towards base speed
+        
         target_interval = self.base_accel_speed * self.speed_divider
         if(self.moveInterval > self.base_accel_speed * self.speed_divider):
             recover_rate = self.accel_speed_below * self.speed_divider
@@ -111,12 +119,11 @@ class Retrocycle:
         # https://stackoverflow.com/questions/28036652/finding-the-shortest-distance-between-two-angles
         rotation_delta = ((self.camera_target_rotation - self.camera.rotation + 180.0) % 360.0) - 180.0
         self.camera.rotation += rotation_delta * min(1.0, self.camera_turn_smoothness * get_frame_time())
-            
-        if(self.should_be_grinding()):
-            self.moveInterval /= 1.005
+
         
         self.camera.target = vector2_add(translateGridtoXY(self.position),Vector2(CELL_W/2,CELL_H/2))
         self.process_body(get_frame_time())
+        self.particle_emmiter.update(Vector2Add(translateGridtoXY(self.position),Vector2(CELL_SIZE//2,CELL_SIZE//2)),get_frame_time())
 
     
 
@@ -124,13 +131,13 @@ class Retrocycle:
 
     def should_be_grinding(self):
         
-        current_vector = map_int_to_heading(self.heading)
+        current_vector = self.last_move_vector
         left = Vector2(-current_vector.y, current_vector.x)
         right = Vector2(current_vector.y, -current_vector.x)
 
         left_pos = Vector2(self.position.x + left.x, self.position.y + left.y)
         right_pos = Vector2(self.position.x + right.x, self.position.y + right.y)
-        for texture , player in self.players:
+        for _ , player in self.players:
             if(Wall(left_pos) in player.body or Wall(right_pos) in player.body):
                 return True
 
@@ -144,14 +151,24 @@ class Retrocycle:
             
         
     def draw(self):
-        for _ , player in self.players:
-            for bodyPart in player.body:
+        for bodyPart in self.body:
                 sx = bodyPart.position.x
                 sy = bodyPart.position.y
                 sv = Vector2(sx,sy)
                 square_coords = translateGridtoXY(sv)
-                DrawRectangleV(square_coords,(CELL_W,CELL_H),player.color)
-                
+                DrawRectangleV(square_coords,(CELL_W,CELL_H),self.color)
+        
+        for _ , player in self.players:
+            if (self is not player):
+                for bodyPart in player.body:
+                    sx = bodyPart.position.x
+                    sy = bodyPart.position.y
+                    sv = Vector2(sx,sy)
+                    square_coords = translateGridtoXY(sv)
+                    DrawRectangleV(square_coords,(CELL_W,CELL_H),player.color)
+        
+        self.particle_emmiter.draw()
+                    
 
     
     def process_body(self, tick):
@@ -161,11 +178,13 @@ class Retrocycle:
             bodyPart.update(tick)
             if(not bodyPart.alive):
                 self.body.remove(bodyPart)
-          
+
+
     def respawn(self):
         self.position = Vector2(randint(1,GRID_AMOUNT_X - 2),randint(1,GRID_AMOUNT_Y - 2))
         self.moveInterval = self.base_accel_speed * self.speed_divider
         self.heading = randint(0,3)
+        self.last_move_vector = map_int_to_heading(self.heading)
         self.pillow = self.max_pillow
         self.body.clear()
         self.camera.rotation = 90.0 * self.heading
@@ -193,3 +212,43 @@ def map_int_to_heading(num):
             return Vector2(-1, 0)  # left_heading
         case _:
             return Vector2(0, 0)
+
+class ParticleEmitter:
+    def __init__(self, position:Vector2, velocity:Vector2, color:Color, lifetime:float) -> None:
+        self.position = position
+        self.velocity = velocity
+        self.color = color
+        self.lifetime = lifetime
+        self.age = 0.0
+        self.number_of_particles = 5
+        self.particles = []
+        
+    def update(self,position,delta_time):
+        self.position = position
+        self.age += delta_time
+        #update particles
+        for particle in self.particles:
+            particle['age'] += delta_time
+            if particle['age'] < particle['lifetime']:
+                particle['position'].x += particle['velocity'].x * delta_time
+                particle['position'].y += particle['velocity'].y * delta_time
+        
+        #remove dead particles - use list comprehension to avoid modifying list during iteration
+        self.particles = [particle for particle in self.particles if particle['age'] < particle['lifetime']]
+        
+        return True
+    def add_particles(self, count):
+        for _ in range(count):
+            angle = random() * 2 * math.pi
+            speed = 50 + random() * 100
+            velocity = Vector2(cos(angle) * speed, sin(angle) * speed)
+            self.particles.append({
+                'position': Vector2(self.position.x, self.position.y),
+                'velocity': velocity,
+                'lifetime': 0.5 + random() * 0.5,
+                'age': 0.0
+            })
+            
+    def draw(self):
+        for particle in self.particles:
+            DrawCircleV(particle['position'], 2, self.color)
