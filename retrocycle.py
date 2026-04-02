@@ -9,12 +9,14 @@ import math
 
 
 class Retrocycle:
-    speed_divider = 0.001
-    base_accel_speed = 30
-    min_accel_speed = base_accel_speed * 1.5
-    turn_accel_multiplier = 0.98
-    accel_speed_below = base_accel_speed / 10
-    accel_speed_above = base_accel_speed / 50
+    base_cells_per_second = 75
+    max_speed_multiplier = 2.5
+    turn_speed_change = 0.95
+    grind_speed_boost = 1.005
+    above_interval_recovery_rate = 6.0
+    below_interval_recovery_rate = 0.5
+    base_move_interval = 1.0 / base_cells_per_second
+    min_move_interval = base_move_interval / max_speed_multiplier
     camera_turn_smoothness = 14.0
     max_pillow = 0.10
     pillow_recover_rate = 0.05
@@ -27,25 +29,25 @@ class Retrocycle:
         self.position = position
         self.color = color
         self.body = set()
-        self.body.add(Wall(Vector2(position.x,position.y)))
+        self.body.add(Wall(Vector2(position.x,position.y),color))
         self.heading = 2
         self.last_move_vector = map_int_to_heading(self.heading)
         self.left_key = left_key
         self.right_key = right_key
         self.isPlayerDead = False
-        self.moveInterval = 0.020
+        self.moveInterval = self.base_move_interval
         self.timer = 0
         self.camera = Camera2D()
         self.camera.offset = Vector2(view_width / 2, view_height / 2)
         self.camera.rotation = 180.0
         self.camera_target_rotation = self.camera.rotation
-        self.camera.zoom = 4.0
+        self.camera.zoom = 5.0
         self.pillow = self.max_pillow
         self.isrespawning = False
         self.hasCollided = False
         self.isGrinding = False
         self.players = []
-        self.particle_emmiter = ParticleEmitter(Vector2(0,0),Vector2(0,0),ORANGE,0.1)
+        self.particle_emmiter = ParticleEmitter(Vector2(0,0),Vector2(0,0),color,0.1)
 
 
         
@@ -53,26 +55,24 @@ class Retrocycle:
             
         if(is_key_pressed(self.left_key)):
             self.heading = (self.heading - 1) % 4
-            self.moveInterval /= self.turn_accel_multiplier
+            self.moveInterval /= self.turn_speed_change
             self.camera_target_rotation = (self.camera_target_rotation + 90) % 360
 
         if(is_key_pressed(self.right_key)):
             self.heading = (self.heading + 1) % 4
-            self.moveInterval /= self.turn_accel_multiplier
+            self.moveInterval /= self.turn_speed_change
             self.camera_target_rotation = (self.camera_target_rotation - 90) % 360
         
         
         
         self.timer += get_frame_time()
                     
-        self.isGrinding = self.should_be_grinding()
-        if(self.isGrinding):
-            self.moveInterval /= 1.005
-            self.particle_emmiter.add_particles(20)
+
         
         if(self.timer >= self.moveInterval):
+            self.timer -= self.moveInterval
             desiredPosition = Vector2Add(self.position,map_int_to_heading(self.heading))
-            next_wall = Wall(Vector2(desiredPosition.x, desiredPosition.y))
+            next_wall = Wall(Vector2(desiredPosition.x, desiredPosition.y),self.color)
             has_collision = False
             if (check_vector_OOB(desiredPosition,GRID_AMOUNT_X)):
                 has_collision = True
@@ -99,22 +99,19 @@ class Retrocycle:
                 self.pillow = min(self.max_pillow, self.pillow + self.pillow_recover_rate * get_frame_time())
         
         
-        target_interval = self.base_accel_speed * self.speed_divider
-        if(self.moveInterval > self.base_accel_speed * self.speed_divider):
-            recover_rate = self.accel_speed_below * self.speed_divider
+        target_interval = self.base_move_interval
+        if(self.moveInterval > self.base_move_interval):
+            interval_t = min(1.0, self.above_interval_recovery_rate * get_frame_time())
         else:
-            recover_rate = self.accel_speed_above * self.speed_divider
-        step = recover_rate * get_frame_time()
+            interval_t = min(1.0, self.below_interval_recovery_rate * get_frame_time())
 
-        interval_diff = abs(target_interval - self.moveInterval)
-        if(interval_diff > 0):
-            interval_t = step / interval_diff
-            self.moveInterval = lerp(self.moveInterval, target_interval, interval_t)
-        
-        if(self.moveInterval > self.min_accel_speed * self.speed_divider):
-            self.moveInterval = self.min_accel_speed * self.speed_divider
+        self.moveInterval = lerp(self.moveInterval, target_interval, interval_t)
+        self.moveInterval = max(self.min_move_interval, self.moveInterval)
             
-
+        self.isGrinding = self.should_be_grinding()
+        if(self.isGrinding):
+            self.moveInterval = max(self.min_move_interval, self.moveInterval / self.grind_speed_boost)
+            self.particle_emmiter.add_particles(2)
         #smooth camera rotation
         # https://stackoverflow.com/questions/28036652/finding-the-shortest-distance-between-two-angles
         rotation_delta = ((self.camera_target_rotation - self.camera.rotation + 180.0) % 360.0) - 180.0
@@ -138,7 +135,7 @@ class Retrocycle:
         left_pos = Vector2(self.position.x + left.x, self.position.y + left.y)
         right_pos = Vector2(self.position.x + right.x, self.position.y + right.y)
         for _ , player in self.players:
-            if(Wall(left_pos) in player.body or Wall(right_pos) in player.body):
+            if(Wall(left_pos,self.color) in player.body or Wall(right_pos,self.color) in player.body):
                 return True
 
         #check if against wall
@@ -152,28 +149,27 @@ class Retrocycle:
         
     def draw(self):
         for bodyPart in self.body:
-                sx = bodyPart.position.x
-                sy = bodyPart.position.y
-                sv = Vector2(sx,sy)
-                square_coords = translateGridtoXY(sv)
-                DrawRectangleV(square_coords,(CELL_W,CELL_H),self.color)
+                bodyPart.draw()
         
         for _ , player in self.players:
             if (self is not player):
                 for bodyPart in player.body:
-                    sx = bodyPart.position.x
-                    sy = bodyPart.position.y
-                    sv = Vector2(sx,sy)
-                    square_coords = translateGridtoXY(sv)
-                    DrawRectangleV(square_coords,(CELL_W,CELL_H),player.color)
+                    bodyPart.draw()
         
         self.particle_emmiter.draw()
                     
-
+    def draw_other_player_arrow(self):
+        for _ , player in self.players:
+            if (self is not player):
+                to_other_player = Vector2Subtract(translateGridtoXY(player.position), translateGridtoXY(self.position))
+                if(Vector2Length(to_other_player) > 0):
+                    to_other_player = Vector2Normalize(to_other_player)
+                    arrow_position = Vector2Add(translateGridtoXY(self.position),Vector2Scale(to_other_player, CELL_SIZE * 1.5))
+                    DrawTriangle(arrow_position, Vector2Add(arrow_position, Vector2Scale(to_other_player, -10) + Vector2(-5, 5)), Vector2Add(arrow_position, Vector2Scale(to_other_player, -10) + Vector2(5, 5)), player.color)
     
     def process_body(self, tick):
-        if(Wall(Vector2(self.position.x,self.position.y)) not in self.body and not self.isrespawning):
-            self.body.add(Wall(Vector2(self.position.x,self.position.y)))
+        if(Wall(Vector2(self.position.x,self.position.y),self.color) not in self.body and not self.isrespawning):
+            self.body.add(Wall(Vector2(self.position.x,self.position.y),self.color))
         for bodyPart in self.body.copy():
             bodyPart.update(tick)
             if(not bodyPart.alive):
@@ -182,8 +178,9 @@ class Retrocycle:
 
     def respawn(self):
         self.position = Vector2(randint(1,GRID_AMOUNT_X - 2),randint(1,GRID_AMOUNT_Y - 2))
-        self.moveInterval = self.base_accel_speed * self.speed_divider
-        self.heading = randint(0,3)
+        self.moveInterval = self.base_move_interval
+        self.timer = 0
+        self.heading = 2
         self.last_move_vector = map_int_to_heading(self.heading)
         self.pillow = self.max_pillow
         self.body.clear()

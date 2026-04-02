@@ -41,6 +41,7 @@ class Game():
             begin_mode_2d(player.camera)
             player.draw()
 
+
             for i in range(0, GRID_AMOUNT_X + 1, 1):
                 x = PLAYFIELD_OFFSET_X + (i * CELL_W)
                 
@@ -50,9 +51,9 @@ class Game():
                 y = PLAYFIELD_OFFSET_Y + (i * CELL_H)
                 
                 DrawLine(PLAYFIELD_OFFSET_X, y, PLAYFIELD_OFFSET_X + PLAYFIELD_WIDTH, y, GRAY)
-            
 
             end_mode_2d()
+            player.
             end_texture_mode()
 
         for i, (texture, player) in enumerate(self.players):
