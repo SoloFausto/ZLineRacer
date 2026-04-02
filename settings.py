@@ -1,10 +1,6 @@
 from pyray import *
 from raylib import *
-from random import random
-from math import cos, sin
 
-from random import randint, uniform
-from os.path import join
 
 WINDOW_WIDTH, WINDOW_HEIGHT = 2560, 1400
 

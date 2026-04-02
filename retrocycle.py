@@ -177,7 +177,6 @@ class Retrocycle:
         self.body.clear()
         self.camera.rotation = 90.0 * self.heading
         self.camera_target_rotation = self.camera.rotation
-        # self.body.add(Wall(Vector2(self.position.x, self.position.y)))
         self.isPlayerDead = False
         self.isrespawning = False
         
