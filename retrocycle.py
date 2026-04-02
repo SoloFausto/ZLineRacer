@@ -157,15 +157,6 @@ class Retrocycle:
                     bodyPart.draw()
         
         self.particle_emmiter.draw()
-                    
-    def draw_other_player_arrow(self):
-        for _ , player in self.players:
-            if (self is not player):
-                to_other_player = Vector2Subtract(translateGridtoXY(player.position), translateGridtoXY(self.position))
-                if(Vector2Length(to_other_player) > 0):
-                    to_other_player = Vector2Normalize(to_other_player)
-                    arrow_position = Vector2Add(translateGridtoXY(self.position),Vector2Scale(to_other_player, CELL_SIZE * 1.5))
-                    DrawTriangle(arrow_position, Vector2Add(arrow_position, Vector2Scale(to_other_player, -10) + Vector2(-5, 5)), Vector2Add(arrow_position, Vector2Scale(to_other_player, -10) + Vector2(5, 5)), player.color)
     
     def process_body(self, tick):
         if(Wall(Vector2(self.position.x,self.position.y),self.color) not in self.body and not self.isrespawning):
