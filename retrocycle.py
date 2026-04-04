@@ -5,7 +5,8 @@ from settings import *
 
 from wall import Wall
 from enum import Enum
-import math
+from math import cos, sin,pi
+from random import random, randint
 
 
 class Retrocycle:
@@ -25,11 +26,11 @@ class Retrocycle:
     grind_particle_max = 250
     
 
-    def __init__(self, position:Vector2,color:Color,left_key,right_key,view_width,view_height) -> None:
+    def __init__(self, position:Vector2,color:Color,color_name,left_key,right_key,view_width,view_height) -> None:
         self.position = position
         self.color = color
-        self.body = set()
-        self.body.add(Wall(Vector2(position.x,position.y),color))
+        self.color_name = color_name
+
         self.heading = 2
         self.last_move_vector = map_int_to_heading(self.heading)
         self.left_key = left_key
@@ -41,13 +42,15 @@ class Retrocycle:
         self.camera.offset = Vector2(view_width / 2, view_height / 2)
         self.camera.rotation = 180.0
         self.camera_target_rotation = self.camera.rotation
-        self.camera.zoom = 5.0
+        self.camera.zoom = 10.0
         self.pillow = self.max_pillow
         self.isrespawning = False
         self.hasCollided = False
         self.isGrinding = False
         self.players = []
         self.particle_emmiter = ParticleEmitter(Vector2(0,0),Vector2(0,0),color,0.1)
+        self.body = set()
+        self.body.add(Wall(Vector2(position.x,position.y),color,color_name,self.heading))
 
 
         
@@ -149,18 +152,30 @@ class Retrocycle:
         
     def draw(self):
         for bodyPart in self.body:
+                if bodyPart.position.x == self.position.x and bodyPart.position.y == self.position.y:
+                    continue
                 bodyPart.draw()
-        
+
         for _ , player in self.players:
             if (self is not player):
                 for bodyPart in player.body:
                     bodyPart.draw()
-        
+
+        ship_key = self.color_name + "_ship"
+        if ship_key in TEXTURES:
+            tex = TEXTURES[ship_key]
+            pos = translateGridtoXY(self.position)
+            cx = pos.x + CELL_W / 2
+            cy = pos.y + CELL_H / 2
+            DrawTexturePro(tex, Rectangle(0, 0, tex.width, tex.height),
+                           Rectangle(cx, cy, CELL_W, CELL_H),
+                           Vector2(CELL_W / 2, CELL_H / 2), self.heading * 90.0, WHITE)
+
         self.particle_emmiter.draw()
     
     def process_body(self, tick):
         if(Wall(Vector2(self.position.x,self.position.y),self.color) not in self.body and not self.isrespawning):
-            self.body.add(Wall(Vector2(self.position.x,self.position.y),self.color))
+            self.body.add(Wall(Vector2(self.position.x,self.position.y),self.color,self.color_name,self.heading))
         for bodyPart in self.body.copy():
             bodyPart.update(tick)
             if(not bodyPart.alive):
@@ -226,7 +241,7 @@ class ParticleEmitter:
         return True
     def add_particles(self, count):
         for _ in range(count):
-            angle = random() * 2 * math.pi
+            angle = random() * 2 * pi
             speed = 50 + random() * 100
             velocity = Vector2(cos(angle) * speed, sin(angle) * speed)
             self.particles.append({

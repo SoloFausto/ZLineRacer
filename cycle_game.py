@@ -19,7 +19,7 @@ class Game():
         self.playersRenderTexture = []
         for i in range(num_players):
             left_key, right_key = GAME_CONTROLS[i]
-            curr_player = Retrocycle(Vector2(0, 0), PLAYER_COLORS[i], left_key, right_key, self.view_width, self.view_height)
+            curr_player = Retrocycle(Vector2(0, 0), PLAYER_COLORS[i], PLAYER_COLOR_NAMES[i], left_key, right_key, self.view_width, self.view_height)
             player_texture = load_render_texture(self.view_width, self.view_height)
             self.players.append((player_texture, curr_player))
         for _ , player in self.players:
@@ -51,6 +51,11 @@ class Game():
             begin_texture_mode(player_texture)
             clear_background(BLACK)
             begin_mode_2d(player.camera)
+            if "bg" in TEXTURES:
+                tex = TEXTURES["bg"]
+                DrawTexturePro(tex, Rectangle(0, 0, tex.width, tex.height),
+                               Rectangle(PLAYFIELD_OFFSET_X, PLAYFIELD_OFFSET_Y, PLAYFIELD_WIDTH, PLAYFIELD_HEIGHT),
+                               Vector2(0, 0), 0.0, WHITE)
             player.draw()
 
             for i in range(0, GRID_AMOUNT_X + 1, 1):
