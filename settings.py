@@ -7,8 +7,14 @@ WINDOW_WIDTH, WINDOW_HEIGHT = 2560, 1800
 GRID_AMOUNT_X = 350
 GRID_AMOUNT_Y = 350 
 GAME_CONTROLS = [(KEY_Z,KEY_X),(KEY_N,KEY_M),(KEY_O,KEY_P),(KEY_Q,KEY_W)]
-PLAYER_COLORS = [RED, GREEN, YELLOW, BLUE]
+red_player_color = Color(197, 88, 77,255)
+blue_player_color = Color(78, 77, 197,255)
+green_player_color = Color(108, 209, 99,255)
+yellow_player_color = Color(197, 193, 77,255)
+
+PLAYER_COLORS = [red_player_color, green_player_color,yellow_player_color ,blue_player_color]
 PLAYER_COLOR_NAMES = ["red", "green", "yellow", "blue"]
+PLAYER_CONTROL_NAMES = ["Z/X", "N/M", "O/P", "Q/W"]
 TEXTURES = {}
 PAUSE_KEY = KEY_BACKSPACE
 FONT_SIZE = max(20, int(WINDOW_WIDTH * 0.03))

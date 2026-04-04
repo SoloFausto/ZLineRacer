@@ -10,7 +10,6 @@ class Game():
         self.numPlayers = num_players
         self.view_width = WINDOW_WIDTH // self.numPlayers
         self.view_height = WINDOW_HEIGHT
-        # Source rectangle for render textures (negative height keeps texture upright).
         self.split_screen_rectangle = Rectangle(0, 0, self.view_width, -self.view_height)
         if(num_players > len(GAME_CONTROLS)):
             print("Too many players! Max is 4")

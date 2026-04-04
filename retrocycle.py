@@ -10,11 +10,11 @@ from random import random, randint
 
 
 class Retrocycle:
-    base_cells_per_second = 75
+    base_cells_per_second = 50
     max_speed_multiplier = 2.5
-    turn_speed_change = 0.95
+    turn_slowdown_factor = 1.5
     grind_speed_boost = 1.005
-    above_interval_recovery_rate = 6.0
+    above_interval_recovery_rate = 2.5
     below_interval_recovery_rate = 0.5
     base_move_interval = 1.0 / base_cells_per_second
     min_move_interval = base_move_interval / max_speed_multiplier
@@ -58,12 +58,12 @@ class Retrocycle:
             
         if(is_key_pressed(self.left_key)):
             self.heading = (self.heading - 1) % 4
-            self.moveInterval /= self.turn_speed_change
+            self.moveInterval = min(self.base_move_interval * 2.0, self.moveInterval * self.turn_slowdown_factor)
             self.camera_target_rotation = (self.camera_target_rotation + 90) % 360
 
         if(is_key_pressed(self.right_key)):
             self.heading = (self.heading + 1) % 4
-            self.moveInterval /= self.turn_speed_change
+            self.moveInterval = min(self.base_move_interval * 2.0, self.moveInterval * self.turn_slowdown_factor)
             self.camera_target_rotation = (self.camera_target_rotation - 90) % 360
         
         
@@ -235,11 +235,11 @@ class ParticleEmitter:
                 particle['position'].x += particle['velocity'].x * delta_time
                 particle['position'].y += particle['velocity'].y * delta_time
         
-        #remove dead particles - use list comprehension to avoid modifying list during iteration
         self.particles = [particle for particle in self.particles if particle['age'] < particle['lifetime']]
         
         return True
     def add_particles(self, count):
+        # Copilot heavily helped with this function
         for _ in range(count):
             angle = random() * 2 * pi
             speed = 50 + random() * 100
