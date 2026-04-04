@@ -18,10 +18,7 @@ if __name__ == '__main__':
   game = Game(1)
   game.isGameOver = True
   num_players = 2
-
-
- 
-
+  
   while not window_should_close():
     if game.isGameOver:
       if isTitleScreen:
@@ -69,13 +66,17 @@ if __name__ == '__main__':
         draw_text("HOW TO PLAY", 50, 80, 150, GREEN)
         y = 300
         line_h = 80
-        draw_text("- Ride your cycle and leave a trail behind you.", 80, y, 60, WHITE)
+        draw_text("- Ride your spaceship and leave a trail behind you.", 80, y, 60, WHITE)
         y += line_h
         draw_text("- Crash into any trail or the arena wall and you die.", 80, y, 60, WHITE)
         y += line_h
         draw_text("- Turning slows you down.", 80, y, 60, WHITE)
         y += line_h
         draw_text("- Grinding (riding alongside a wall or trail) builds even more speed.", 80, y, 60, WHITE)
+        y += line_h
+        draw_text("- The pillow helps cushion some impacts, use it to your advantage.", 80, y, 60, WHITE)
+        y += line_h
+        draw_text("- Press return to pause the game and see the scores.", 80, y, 60, WHITE)
         y += line_h
         draw_text("- Out manouver your oponents! Follow the arrows to see where they are.", 80, y, 60, YELLOW)
         y += line_h * 2

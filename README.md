@@ -13,4 +13,8 @@ Done for the COSC481 -- Playful Thinking, Serious Coding class midterm by Fausto
 Generative AI was used in some minor ways to rework some code and just to think through stuff, and in some major ways when implementing
 the grinding particles. When applicable, there are comments throughout the code pointing out the different sources of stuff.
 
+Mechanics and game features:
+Fully featured split screen multiplayer
+Grinding alongside walls as a way to gain velocity
+
 Created with raylib and python.

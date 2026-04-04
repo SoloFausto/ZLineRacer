@@ -38,7 +38,10 @@ class Game():
             player.update()
             
             if(player.isPlayerDead):
-                print(f"Player died!")
+                if player.collided_with is player:
+                    player.score = max(0, player.score - 1)
+                elif player.collided_with is not None:
+                    player.collided_with.score += 1
                 player.respawn()
                 
     def reset(self,num_players):
@@ -77,17 +80,28 @@ class Game():
             self.draw_player_UI(player, i * self.view_width)
         
         if(self.ispaused):
+            root_x = WINDOW_WIDTH // 2 - FONT_SIZE * 5
+            root_y = WINDOW_HEIGHT // 4 + FONT_SIZE * 3
+
             draw_rectangle(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, Color(0, 0, 0, 150))
-            draw_text("PAUSED", WINDOW_WIDTH // 2 - FONT_SIZE * 2, WINDOW_HEIGHT // 2 - FONT_SIZE, FONT_SIZE, WHITE)
-            draw_text("Press Enter to Resume", WINDOW_WIDTH // 2 - FONT_SIZE * 4, WINDOW_HEIGHT // 2 + FONT_SIZE, FONT_SIZE, WHITE)
-            draw_text("Press H to return to the main menu", WINDOW_WIDTH // 2 - FONT_SIZE * 6, WINDOW_HEIGHT // 2 + FONT_SIZE * 3, FONT_SIZE, WHITE)
+            draw_text("PAUSED", root_x, WINDOW_HEIGHT // 4, FONT_SIZE * 2, WHITE)
+
+            draw_text("SCOREBOARD", root_x, root_y, FONT_SIZE, WHITE)
+            root_y += FONT_SIZE + 10
+            for i, (_, player) in enumerate(self.players):
+                draw_text(f"Player {i + 1}:  {player.score}", root_x, root_y, FONT_SIZE, player.color)
+                root_y += FONT_SIZE + 5
+
+            draw_text("Press Return to Resume", root_x, WINDOW_HEIGHT * 3 // 4, FONT_SIZE, WHITE)
+            draw_text("Press H to return to the main menu", root_x, WINDOW_HEIGHT * 3 // 4 + FONT_SIZE + 10, FONT_SIZE, WHITE)
 
         
     def draw_player_UI(self, player,view_root):
         show_velocity = round(1.0 / player.moveInterval, 2)
         shown_pillow = round(player.pillow, 2)
-        draw_text(f"Velocity: {show_velocity}", view_root + 10, 10, FONT_SIZE, WHITE)
-        draw_text(f"Pillow: {shown_pillow}", view_root + 10, 150, FONT_SIZE, WHITE)  
+        draw_text(f"Score: {player.score}", view_root + 10, 10, FONT_SIZE, player.color)
+        draw_text(f"Velocity: {show_velocity}", view_root + 10, 10 + FONT_SIZE + 5, FONT_SIZE, WHITE)
+        draw_text(f"Pillow: {shown_pillow}", view_root + 10, 10 + (FONT_SIZE + 5) * 2, FONT_SIZE, WHITE)
         
                         
     def draw_player_arrow(self,target_player):

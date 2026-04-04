@@ -12,15 +12,15 @@ from random import random, randint
 class Retrocycle:
     base_cells_per_second = 50
     max_speed_multiplier = 2.5
-    turn_slowdown_factor = 1.5
+    turn_slowdown_factor = 1.05
     grind_speed_boost = 1.005
-    above_interval_recovery_rate = 2.5
+    above_interval_recovery_rate = 0.5
     below_interval_recovery_rate = 0.5
     base_move_interval = 1.0 / base_cells_per_second
     min_move_interval = base_move_interval / max_speed_multiplier
     camera_turn_smoothness = 14.0
     max_pillow = 0.10
-    pillow_recover_rate = 0.05
+    pillow_recover_rate = 0.45
     pillow_loss_rate = 0.35
     grind_particle_spawn_rate = 220
     grind_particle_max = 250
@@ -36,6 +36,8 @@ class Retrocycle:
         self.left_key = left_key
         self.right_key = right_key
         self.isPlayerDead = False
+        self.score = 0
+        self.collided_with = None
         self.moveInterval = self.base_move_interval
         self.timer = 0
         self.camera = Camera2D()
@@ -77,6 +79,7 @@ class Retrocycle:
             desiredPosition = Vector2Add(self.position,map_int_to_heading(self.heading))
             next_wall = Wall(Vector2(desiredPosition.x, desiredPosition.y),self.color)
             has_collision = False
+            collision_owner = None
             if (check_vector_OOB(desiredPosition,GRID_AMOUNT_X)):
                 has_collision = True
             for _ , player in self.players:
@@ -84,10 +87,13 @@ class Retrocycle:
                     continue
                 if(next_wall in player.body):
                     has_collision = True
+                    collision_owner = player
                     break
 
             if(has_collision):
                 self.hasCollided = True
+                if self.collided_with is None:
+                    self.collided_with = collision_owner
             else:
                 self.hasCollided = False
                 self.last_move_vector = map_int_to_heading(self.heading)
@@ -193,6 +199,7 @@ class Retrocycle:
         self.camera.rotation = 90.0 * self.heading
         self.camera_target_rotation = self.camera.rotation
         self.isPlayerDead = False
+        self.collided_with = None
         self.isrespawning = False
         
         
