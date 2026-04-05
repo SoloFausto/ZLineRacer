@@ -7,6 +7,10 @@ Project roadmap is maybe in the future a multiplayer mode, along with further im
 Sources for the assets are:
 https://assetstore.unity.com/packages/2d/textures-materials/galaxia-2d-space-shooter-sprite-pack-1-64944
 https://deep-fold.itch.io/space-background-generator
+https://soundcloud.com/ccpgames/eve-online-everyday-zone
+https://pixabay.com/sound-effects/film-special-effects-crash-86706/
+https://pixabay.com/sound-effects/film-special-effects-energy-hum-29083/
+https://pixabay.com/sound-effects/film-special-effects-power-charge-6798/
 
 Done for the COSC481 -- Playful Thinking, Serious Coding class midterm by Fausto De Leon.
 

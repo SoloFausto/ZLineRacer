@@ -4,9 +4,11 @@ from raylib import *
 from settings import *
 
 class Game():
-    def __init__(self,num_players) -> None:
+    def __init__(self,num_players, win_score=WIN_SCORE) -> None:
         self.isGameOver = True
         self.ispaused = False
+        self.winner = None
+        self.win_score = win_score
         self.numPlayers = num_players
         self.view_width = WINDOW_WIDTH // self.numPlayers
         self.view_height = WINDOW_HEIGHT
@@ -42,10 +44,21 @@ class Game():
                     player.score = max(0, player.score - 1)
                 elif player.collided_with is not None:
                     player.collided_with.score += 1
+                    if player.collided_with.score >= self.win_score:
+                        self.winner = player.collided_with
+                        self.isGameOver = True
+                        return
                 player.respawn()
-                
-    def reset(self,num_players):
-        self.__init__(num_players)
+
+        any_grinding = any(p.isGrinding for _, p in self.players)
+        if "grind" in SOUNDS:
+            if any_grinding and not is_sound_playing(SOUNDS["grind"]):
+                play_sound(SOUNDS["grind"])
+            elif not any_grinding and is_sound_playing(SOUNDS["grind"]):
+                stop_sound(SOUNDS["grind"])
+
+    def reset(self, num_players, win_score=WIN_SCORE):
+        self.__init__(num_players, win_score)
     def draw(self):
         
         # https://www.raylib.com/examples/core/loader.html?name=core_2d_camera_split_screen
@@ -53,11 +66,11 @@ class Game():
             begin_texture_mode(player_texture)
             clear_background(BLACK)
             begin_mode_2d(player.camera)
-            if "bg" in TEXTURES:
-                tex = TEXTURES["bg"]
-                DrawTexturePro(tex, Rectangle(0, 0, tex.width, tex.height),
-                               Rectangle(PLAYFIELD_OFFSET_X, PLAYFIELD_OFFSET_Y, PLAYFIELD_WIDTH, PLAYFIELD_HEIGHT),
-                               Vector2(0, 0), 0.0, WHITE)
+
+            background = TEXTURES["bg"]
+            DrawTexturePro(background, Rectangle(0, 0, background.width, background.height),
+                            Rectangle(PLAYFIELD_OFFSET_X, PLAYFIELD_OFFSET_Y, PLAYFIELD_WIDTH, PLAYFIELD_HEIGHT),
+                            Vector2(0, 0), 0.0, WHITE)
             player.draw()
 
             for i in range(0, GRID_AMOUNT_X + 1, 1):
@@ -98,7 +111,7 @@ class Game():
         
     def draw_player_UI(self, player,view_root):
         show_velocity = round(1.0 / player.moveInterval, 2)
-        shown_pillow = round(player.pillow, 2)
+        shown_pillow = round(player.pillow * 100, 2)
         draw_text(f"Score: {player.score}", view_root + 10, 10, FONT_SIZE, player.color)
         draw_text(f"Velocity: {show_velocity}", view_root + 10, 10 + FONT_SIZE + 5, FONT_SIZE, WHITE)
         draw_text(f"Pillow: {shown_pillow}", view_root + 10, 10 + (FONT_SIZE + 5) * 2, FONT_SIZE, WHITE)

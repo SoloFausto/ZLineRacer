@@ -16,7 +16,9 @@ PLAYER_COLORS = [red_player_color, green_player_color,yellow_player_color ,blue_
 PLAYER_COLOR_NAMES = ["red", "green", "yellow", "blue"]
 PLAYER_CONTROL_NAMES = ["Z/X", "N/M", "O/P", "Q/W"]
 TEXTURES = {}
+SOUNDS = {}
 PAUSE_KEY = KEY_BACKSPACE
+WIN_SCORE = 10
 FONT_SIZE = max(20, int(WINDOW_WIDTH * 0.03))
 
 

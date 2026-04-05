@@ -102,8 +102,10 @@ class Retrocycle:
         
         if(self.hasCollided):
             self.pillow -= self.pillow_loss_rate * get_frame_time()
-            if(self.pillow <= 0):
+            if(self.pillow <= 0 and not self.isPlayerDead):
                 self.isPlayerDead = True
+                if "crash" in SOUNDS:
+                    play_sound(SOUNDS["crash"])
         else:
                 self.pillow = min(self.max_pillow, self.pillow + self.pillow_recover_rate * get_frame_time())
         
@@ -165,7 +167,18 @@ class Retrocycle:
         for _ , player in self.players:
             if (self is not player):
                 for bodyPart in player.body:
+                    if bodyPart.position.x == player.position.x and bodyPart.position.y == player.position.y:
+                        continue
                     bodyPart.draw()
+                ship_key = player.color_name + "_ship"
+                if ship_key in TEXTURES:
+                    tex = TEXTURES[ship_key]
+                    pos = translateGridtoXY(player.position)
+                    cx = pos.x + CELL_W / 2
+                    cy = pos.y + CELL_H / 2
+                    DrawTexturePro(tex, Rectangle(0, 0, tex.width, tex.height),
+                                   Rectangle(cx, cy, CELL_W, CELL_H),
+                                   Vector2(CELL_W / 2, CELL_H / 2), player.heading * 90.0, WHITE)
 
         ship_key = self.color_name + "_ship"
         if ship_key in TEXTURES:
