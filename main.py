@@ -94,8 +94,8 @@ if __name__ == '__main__':
         draw_text(f"Score: {winner.score}", 50, WINDOW_HEIGHT // 2 + 130, 100, winner.color)
         draw_text("Press Enter to continue", 50, WINDOW_HEIGHT // 2 + 280, 80, WHITE)
     elif isTitleScreen and game.isGameOver:
-        draw_text("COMET RIDERS", 50, WINDOW_HEIGHT//2 - 20, 200, GREEN)
-        draw_text("Press Enter to Start", 60, WINDOW_HEIGHT//2 + 250, 100, WHITE)
+        draw_text("COMET RIDERS", 50, 300 , 200, GREEN)
+        draw_text("Press Enter to Start", 60, WINDOW_HEIGHT//2 + 150, 100, WHITE)
     elif isInstructions and game.isGameOver:
         draw_text("HOW TO PLAY", 50, 80, 150, GREEN)
         y = 300

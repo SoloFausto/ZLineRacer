@@ -34,7 +34,10 @@ class Game():
         if(is_key_pressed(KEY_H) and self.ispaused):
             self.isGameOver = True
             self.ispaused = False
-        if(self.ispaused):
+            
+        if(self.ispaused or self.isGameOver):
+            if "grind" in SOUNDS and is_sound_playing(SOUNDS["grind"]):
+                stop_sound(SOUNDS["grind"])
             return
         for _ , player in self.players:
             player.update()
@@ -47,6 +50,8 @@ class Game():
                     if player.collided_with.score >= self.win_score:
                         self.winner = player.collided_with
                         self.isGameOver = True
+                        if "grind" in SOUNDS and is_sound_playing(SOUNDS["grind"]):
+                            stop_sound(SOUNDS["grind"])
                         return
                 player.respawn()
 

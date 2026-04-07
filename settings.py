@@ -2,7 +2,7 @@ from pyray import *
 from raylib import *
 
 
-WINDOW_WIDTH, WINDOW_HEIGHT = 2560, 1800
+WINDOW_WIDTH, WINDOW_HEIGHT = 2560, 1440
 
 GRID_AMOUNT_X = 350
 GRID_AMOUNT_Y = 350 
