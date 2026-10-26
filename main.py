@@ -5,7 +5,9 @@ from cycle_game import Game
 
 if __name__ == '__main__':  
 
-  init_window(WINDOW_WIDTH, WINDOW_HEIGHT, "Python Game")
+  set_config_flags(FLAG_WINDOW_RESIZABLE | FLAG_WINDOW_HIGHDPI)
+  init_window(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT, "Comet Riders")
+  toggle_borderless_windowed()
   init_audio_device()
   set_target_fps(120)
   SOUNDS["crash"] = load_sound("assets/crash.mp3")
@@ -24,6 +26,20 @@ if __name__ == '__main__':
     TEXTURES[f"{name}_wall"] = load_texture(f"assets/{name}_wall.png")
   TEXTURES["bg"] = load_texture("assets/bg.png")
   TEXTURES["bg_menu"] = load_texture("assets/bg_menu.png")
+  game_screen = load_render_texture(WINDOW_WIDTH, WINDOW_HEIGHT)
+  instruction_lines = [
+      ("- Ride your spaceship and leave a trail behind you.", WHITE),
+      ("- Crash into any trail or the arena wall and you die.", WHITE),
+      ("- Turning slows you down.", WHITE),
+      ("- Grinding (riding alongside a wall or trail) builds even more speed.", WHITE),
+      ("- The pillow helps cushion some impacts, use it to your advantage.", WHITE),
+      ("- Press return to pause the game and see the scores.", WHITE),
+      ("- Out manouver your oponents! Follow the arrows to see where they are.", YELLOW),
+  ]
+  instruction_font_size = 60
+  while any(measure_text(text, instruction_font_size) > WINDOW_WIDTH - 160 for text, _ in instruction_lines):
+    instruction_font_size -= 1
+  instruction_line_height = instruction_font_size + 20
   isTitleScreen = True
   isInstructions = False
   isPlayerSelect = False
@@ -75,7 +91,10 @@ if __name__ == '__main__':
         isInstructions = False
         isPlayerSelect = False
     
-    begin_drawing()
+    if not game.isGameOver:
+      game.render_player_views()
+
+    begin_texture_mode(game_screen)
     clear_background(BLACK)
     
     
@@ -99,21 +118,9 @@ if __name__ == '__main__':
     elif isInstructions and game.isGameOver:
         draw_text("HOW TO PLAY", 50, 80, 150, GREEN)
         y = 300
-        line_h = 80
-        draw_text("- Ride your spaceship and leave a trail behind you.", 80, y, 60, WHITE)
-        y += line_h
-        draw_text("- Crash into any trail or the arena wall and you die.", 80, y, 60, WHITE)
-        y += line_h
-        draw_text("- Turning slows you down.", 80, y, 60, WHITE)
-        y += line_h
-        draw_text("- Grinding (riding alongside a wall or trail) builds even more speed.", 80, y, 60, WHITE)
-        y += line_h
-        draw_text("- The pillow helps cushion some impacts, use it to your advantage.", 80, y, 60, WHITE)
-        y += line_h
-        draw_text("- Press return to pause the game and see the scores.", 80, y, 60, WHITE)
-        y += line_h
-        draw_text("- Out manouver your oponents! Follow the arrows to see where they are.", 80, y, 60, YELLOW)
-        y += line_h * 2
+        for instruction, color in instruction_lines:
+            draw_text(instruction, 80, y, instruction_font_size, color)
+            y += instruction_line_height
         draw_text("Press Enter to Continue", 80, WINDOW_HEIGHT - 130, 70, WHITE)
     elif isPlayerSelect and game.isGameOver:
         draw_text("PLAYER SELECT", 50, 200, 200, GREEN)
@@ -136,6 +143,25 @@ if __name__ == '__main__':
               draw_rectangle(player_x, player_y, 80, 80, PLAYER_COLORS[i])
             draw_text(f"Player {i+1} controls are: {PLAYER_CONTROL_NAMES[i]}", player_x + 110, player_y + 25, 40, WHITE)
         draw_text("Press Enter to Start", 60, WINDOW_HEIGHT -150, 100, WHITE)
+    end_texture_mode()
+
+    begin_drawing()
+    clear_background(BLACK)
+    screen_width = get_screen_width()
+    screen_height = get_screen_height()
+    screen_scale = min(screen_width / WINDOW_WIDTH, screen_height / WINDOW_HEIGHT)
+    rendered_width = WINDOW_WIDTH * screen_scale
+    rendered_height = WINDOW_HEIGHT * screen_scale
+    screen_x = (screen_width - rendered_width) / 2
+    screen_y = (screen_height - rendered_height) / 2
+    draw_texture_pro(
+        game_screen.texture,
+        Rectangle(0, 0, WINDOW_WIDTH, -WINDOW_HEIGHT),
+        Rectangle(screen_x, screen_y, rendered_width, rendered_height),
+        Vector2(0, 0),
+        0.0,
+        WHITE,
+    )
 
 
     end_drawing()

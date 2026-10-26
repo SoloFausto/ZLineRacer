@@ -64,9 +64,7 @@ class Game():
 
     def reset(self, num_players, win_score=WIN_SCORE):
         self.__init__(num_players, win_score)
-    def draw(self):
-        
-        # https://www.raylib.com/examples/core/loader.html?name=core_2d_camera_split_screen
+    def render_player_views(self):
         for player_texture, player in self.players:
             begin_texture_mode(player_texture)
             clear_background(BLACK)
@@ -93,6 +91,7 @@ class Game():
             end_mode_2d()
             end_texture_mode()
 
+    def draw(self):
         for i, (texture, player) in enumerate(self.players):
             draw_texture_rec(texture.texture, self.split_screen_rectangle, Vector2(i * self.view_width, 0), WHITE)
             self.draw_player_UI(player, i * self.view_width)
